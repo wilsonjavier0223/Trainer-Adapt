@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101b24">
+<title>Trainer Adaptativo</title>
+<style>
+:root{color-scheme:dark;--bg:#0b131a;--panel:#14232c;--line:#29404b;--text:#edf7f6;--muted:#9cb1b7;--mint:#67e8c2;--amber:#ffd27a;--red:#ff8c91}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 80% 0,#1b3c43,transparent 45%),var(--bg);color:var(--text);font:16px/1.5 system-ui,Arial,sans-serif}
+main{max-width:850px;margin:auto;padding:22px 15px 100px}
+header{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+.logo{background:var(--mint);color:#08231c;padding:10px 14px;border-radius:14px;font-size:24px;font-weight:900}
+h1{font-size:21px;margin:0}h2{font-size:25px;line-height:1.2}h3{font-size:17px;margin:0 0 12px}
+p{color:var(--muted)}.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:19px;margin-bottom:15px}
+.hero{background:linear-gradient(130deg,#193c3e,#172932);border-color:#315452}
+.tag{display:inline-block;background:#213b3b;color:var(--mint);padding:5px 10px;border-radius:99px;font-size:12px;font-weight:800}
+button{font:inherit;font-weight:750;border:0;border-radius:12px;padding:12px 15px;cursor:pointer;background:var(--mint);color:#08231c}
+button.secondary{background:#20323d;border:1px solid var(--line);color:var(--text)}
+nav{position:fixed;bottom:0;left:0;right:0;background:#0d171ef5;border-top:1px solid var(--line);display:flex;justify-content:center;padding:9px;gap:5px}
+nav button{flex:1;max-width:180px;background:transparent;color:var(--muted);font-size:13px;padding:10px 3px}
+nav button.active{background:#203a3b;color:var(--mint)}
+.page{display:none}.page.active{display:block}
+.move{padding:12px 0;border-bottom:1px solid var(--line)}.move:last-child{border:0}
+.move strong{display:block}.move p{font-size:14px;margin:3px 0}
+.field{margin:14px 0}.field label{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
+input,select,textarea{width:100%;padding:12px;border-radius:11px;border:1px solid var(--line);background:#0d1920;color:var(--text);font:inherit}
+textarea{min-height:75px}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.row button{flex:1}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.big{font-size:30px;font-weight:850;color:var(--mint)}
+.small{font-size:13px;color:var(--muted)}
+.note{background:#302b20;border-left:3px solid var(--amber);padding:12px;border-radius:7px;font-size:13px}
+.record{padding:12px 0;border-bottom:1px solid var(--line)}
+.good{color:var(--mint)}.warn{color:var(--amber)}.bad{color:var(--red)}
+@media(min-width:650px){.stats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<main>
+<header><div class="logo">↗</div><div><h1>Trainer Adaptativo</h1><div class="small">Tu progreso, a tu ritmo</div></div></header>
+
+<section id="home" class="page active">
+<div class="card hero">
+<span class="tag">TU PUNTO DE PARTIDA</span>
+<h2>Hoy no necesitas hacerlo perfecto. Solo empezar.</h2>
+<p>Diez minutos suaves para comenzar a moverte sin presiones. Descansar también cuenta.</p>
+<button onclick="show('log')">Registrar mi sesión ↗</button>
+</div>
+<div class="card">
+<h3>Tu rutina inicial · 10 minutos</h3>
+<div class="move"><strong>1. Marcha suave · 2 min</strong><p>Pasos cortos en el sitio. Puedes apoyarte en una silla.</p></div>
+<div class="move"><strong>2. Extensiones de rodilla sentado · 2 min</strong><p>Alterna las piernas lentamente, sin forzar.</p></div>
+<div class="move"><strong>3. Movilidad de hombros · 1 min</strong><p>Círculos pequeños y cómodos. No fuerces el cuello.</p></div>
+<div class="move"><strong>4. Sentarse y levantarse · 1 min (opcional)</strong><p>Usa una silla firme y las manos como apoyo. Omite este ejercicio si no te sientes seguro.</p></div>
+<div class="move"><strong>5. Marcha lenta y calma · 2 min</strong><p>Baja el ritmo, respira normalmente y descansa cuando lo necesites.</p></div>
+<p class="small">Los minutos restantes son para cambiar de ejercicio y hacer pausas. No tienes que completar todo.</p>
+</div>
+<div class="card">
+<h3>Tu resumen</h3>
+<div class="stats">
+<div><div id="totalMinutes" class="big">0</div><div class="small">Minutos acumulados</div></div>
+<div><div id="totalSessions" class="big">0</div><div class="small">Sesiones registradas</div></div>
+</div>
+</div>
+</section>
+
+<section id="log" class="page">
+<div class="card">
+<h2>Registrar sesión</h2>
+<p>Registra lo que realmente hiciste, incluso si solo fueron unos minutos.</p>
+<form id="sessionForm">
+<div class="field"><label for="date">Fecha</label><input id="date" type="date" required></div>
+<div class="field"><label for="minutes">Minutos de movimiento</label><input id="minutes" type="number" min="0" max="180" value="10" required></div>
+<div class="field"><label for="effort">Esfuerzo (1 fácil – 5 demasiado)</label><select id="effort"><option value="1">1 · Muy fácil</option><option value="2" selected>2 · Ligero</option><option value="3">3 · Moderado</option><option value="4">4 · Alto</option><option value="5">5 · Demasiado</option></select></div>
+<div class="field"><label for="completion">¿Completaste lo planeado?</label><select id="completion"><option value="yes">Sí</option><option value="partial">Una parte</option><option value="no">No</option></select></div>
+<div class="field"><label for="symptoms">¿Tuviste síntomas inusuales?</label><select id="symptoms"><option value="none">No</option><option value="mild">Molestia leve</option><option value="red">Señal de alarma</option></select></div>
+<div class="field"><label for="feeling">¿Cómo terminaste?</label><select id="feeling"><option value="better">Mejor o con energía</option><option value="same" selected>Igual que antes</option><option value="tired">Cansado, pero bien</option><option value="worse">Peor que al empezar</option></select></div>
+<div class="field"><label for="recovery">Recuperación al día siguiente</label><select id="recovery"><option value="unknown">Aún no lo sé</option><option value="good">Buena</option><option value="some">Cansancio o agujetas leves</option><option value="poor">Mala: dolor o cansancio importante</option></select></div>
+<div class="field"><label for="notes">Notas (opcional)</label><textarea id="notes" placeholder="¿Cómo te sentiste?"></textarea></div>
+<div class="note">Detente ante cualquier síntoma preocupante. Dolor en el pecho, desmayo o dificultad respiratoria intensa o repentina requieren atención médica urgente.</div>
+<div class="row" style="margin-top:16px"><button type="submit">Guardar sesión</button><button class="secondary" type="button" onclick="resetForm()">Restablecer</button></div>
+</form>
+</div>
+</section>
+
+<section id="progress" class="page">
+<div class="card"><h2>Tu progreso</h2><div class="stats">
+<div><div id="pSessions" class="big">0</div><div class="small">Sesiones</div></div>
+<div><div id="pMinutes" class="big">0</div><div class="small">Minutos</div></div>
+<div><div id="pEffort" class="big">—</div><div class="small">Esfuerzo medio / 5</div></div>
+<div><div id="pWeek" class="big">0/3</div><div class="small">Sesiones esta semana</div></div>
+</div></div>
+<div class="card"><h3>Recomendación para la próxima sesión</h3><span id="decisionTag" class="tag">Empezar suave</span><p id="decisionText">Empieza con 10 minutos suaves y registra cómo te sientes.</p></div>
+<div class="card"><h3>Minutos por sesión</h3><div id="chart" class="small">Registra sesiones para ver tu progreso.</div></div>
+</section>
+
+<section id="history" class="page">
+<div class="card"><h2>Historial</h2><div id="historyList" class="small">Todavía no hay sesiones registradas.</div><div class="row" style="margin-top:15px"><button onclick="exportCSV()">Exportar CSV</button><button class="secondary" onclick="clearRecords()">Borrar registros</button></div></div>
+<p class="small">Los datos se guardan solo en este navegador. Si borras los datos del navegador o cambias de dispositivo, podrías perderlos. Exporta una copia para conservarlos.</p>
+</section>
+</main>
+<nav>
+<button class="active" data-page="home" onclick="show('home')">⌂<br>Hoy</button>
+<button data-page="log" onclick="show('log')">＋<br>Registrar</button>
+<button data-page="progress" onclick="show('progress')">↗<br>Progreso</button>
+<button data-page="history" onclick="show('history')">◷<br>Historial</button>
+</nav>
+<script>
+const KEY='trainer-adaptativo-v1';
+let records=[];
+try{records=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){records=[]}
+if(!Array.isArray(records))records=[];
+const $=id=>document.getElementById(id);
+function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function show(id){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));if(id==='log'&&!$('date').value)$('date').value=today();if(id==='progress'||id==='history')render();window.scrollTo(0,0)}
+function resetForm(){$('date').value=today();$('minutes').value=10;$('effort').value='2';$('completion').value='yes';$('symptoms').value='none';$('feeling').value='same';$('recovery').value='unknown';$('notes').value=''}
+function decision(){
+ if(!records.length)return {tag:'Empezar suave',cls:'',text:'Empieza con 10 minutos suaves. Descansa cuando lo necesites.'};
+ const r=records[records.length-1];
+ if(r.symptoms==='red'||r.feeling==='worse'||r.recovery==='poor')return {tag:'Pausa y reduce',cls:'bad',text:'No aumentes el ejercicio. Descansa y busca orientación médica si el malestar persiste. Si hubo una señal de alarma, busca atención urgente.'};
+ if(r.symptoms==='mild'||r.effort>=4||r.recovery==='some'||r.completion!=='yes'||r.feeling==='tired')return {tag:'Mantener o reducir',cls:'warn',text:'Repite una sesión igual o más corta, de 5 a 10 minutos, con pausas. No aumentes todavía.'};
+ const last=records.slice(-2);
+ if(last.length===2&&last.every(x=>x.symptoms==='none'&&x.effort<=2&&x.completion==='yes'&&x.feeling!=='worse'&&x.recovery!=='poor'))return {tag:'Progresar muy poco',cls:'',text:'Si también te sientes bien hoy, puedes añadir solo 1 minuto a la siguiente sesión. No aumentes más de una cosa a la vez.'};
+ return {tag:'Mantener',cls:'',text:'Repite unos 10 minutos y observa cómo te sientes durante la actividad y al día siguiente.'}
+}
+function render(){
+ const total=records.reduce((s,r)=>s+r.minutes,0);
+ $('totalMinutes').textContent=total;$('totalSessions').textContent=records.length;
+ $('pSessions').textContent=records.length;$('pMinutes').textContent=total;
+ $('pEffort').textContent=records.length?(records.reduce((s,r)=>s+r.effort,0)/records.length).toFixed(1):'—';
+ const start=new Date();start.setHours(0,0,0,0);start.setDate(start.getDate()-((start.getDay()+6)%7));
+ $('pWeek').textContent=records.filter(r=>new Date(r.date+'T12:00:00')>=start).length+'/3';
+ const d=decision();$('decisionTag').textContent=d.tag;$('decisionTag').className='tag '+d.cls;$('decisionText').textContent=d.text;
+ $('chart').textContent=records.length?records.slice(-10).map(r=>r.date+': '+r.minutes+' min').join(' · '):'Registra sesiones para ver tu progreso.';
+ $('historyList').innerHTML=records.length?records.slice().reverse().map(r=>'<div class="record"><strong>'+r.date+' · '+r.minutes+' min</strong><br>Esfuerzo '+r.effort+'/5 · '+({yes:'Completada',partial:'Parcial',no:'No completada'}[r.completion])+' · '+({none:'Sin síntomas',mild:'Molestia leve',red:'Señal de alarma'}[r.symptoms])+(r.notes?'<p>'+escapeHTML(r.notes)+'</p>':'')+'</div>').join(''):'Todavía no hay sesiones registradas.';
+}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+$('sessionForm').addEventListener('submit',e=>{
+ e.preventDefault();
+ const r={date:$('date').value,minutes:Number($('minutes').value),effort:Number($('effort').value),completion:$('completion').value,symptoms:$('symptoms').value,feeling:$('feeling').value,recovery:$('recovery').value,notes:$('notes').value.trim()};
+ if(!r.date||r.minutes<0||r.minutes>180)return;
+ records.push(r);records.sort((a,b)=>a.date.localeCompare(b.date));localStorage.setItem(KEY,JSON.stringify(records));render();show('progress');
+ if(r.symptoms==='red')alert('Detén el ejercicio. Si presentas dolor en el pecho, desmayo o dificultad respiratoria intensa o repentina, busca atención médica urgente.');
+ else alert('¡Registro guardado! Bien por dedicarte este tiempo.');
+});
+function exportCSV(){if(!records.length){alert('Todavía no hay registros.');return}const cols=['date','minutes','effort','completion','symptoms','feeling','recovery','notes'];const csv=[cols.join(','),...records.map(r=>cols.map(k=>'"'+String(r[k]??'').replace(/"/g,'""')+'"').join(','))].join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.download='trainer-adaptativo.csv';a.click();URL.revokeObjectURL(a.href)}
+function clearRecords(){if(confirm('¿Borrar todos los registros? No se puede deshacer.')){records=[];localStorage.removeItem(KEY);render()}}
+resetForm();render();
+</script>
+</body>
+</html>
